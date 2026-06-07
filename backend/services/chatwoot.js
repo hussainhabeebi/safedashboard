@@ -34,7 +34,10 @@ async function getMessages(conversationId) {
   const res = await client().get(
     `/api/v1/accounts/${ACCOUNT()}/conversations/${conversationId}/messages`
   );
-  return res.data;
+  // Chatwoot may return { payload: [...] } or { data: { payload: [...] } }
+  const raw = res.data;
+  const msgs = raw?.payload ?? raw?.data?.payload ?? raw ?? [];
+  return { payload: Array.isArray(msgs) ? msgs : [] };
 }
 
 async function sendMessage(conversationId, content) {
@@ -42,7 +45,9 @@ async function sendMessage(conversationId, content) {
     `/api/v1/accounts/${ACCOUNT()}/conversations/${conversationId}/messages`,
     { content, message_type: 'outgoing', private: false }
   );
-  return res.data;
+  // Return the message object directly so frontend can replace the temp message
+  const payload = res.data?.payload ?? res.data;
+  return { payload: Array.isArray(payload) ? payload[0] : payload };
 }
 
 async function assignToAgent(conversationId) {

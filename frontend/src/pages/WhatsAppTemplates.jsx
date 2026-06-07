@@ -5,9 +5,10 @@ import useIsMobile from '../hooks/useIsMobile'
 
 const CATEGORIES = ['MARKETING', 'UTILITY', 'AUTHENTICATION']
 const LANGUAGES = [
-  { value: 'en', label: 'English' },
-  { value: 'ml', label: 'Malayalam' },
+  { value: 'en_US', label: 'English' },
   { value: 'en_IN', label: 'English (India)' },
+  { value: 'ml', label: 'Malayalam' },
+  { value: 'hi', label: 'Hindi' },
 ]
 const STATUS_STYLE = {
   APPROVED: { bg: '#e8f5e9', color: '#1a5c3a' },
@@ -22,7 +23,7 @@ export default function WhatsAppTemplates() {
   const [templates, setTemplates] = useState([])
   const [loadingTemplates, setLoadingTemplates] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
-  const [createForm, setCreateForm] = useState({ name: '', category: 'MARKETING', language: 'en', body: '' })
+  const [createForm, setCreateForm] = useState({ name: '', category: 'MARKETING', language: 'en_US', body: '' })
   const [creating, setCreating] = useState(false)
   const [createResult, setCreateResult] = useState(null)
 
@@ -66,7 +67,7 @@ export default function WhatsAppTemplates() {
         components: [{ type: 'BODY', text: createForm.body }]
       }, { withCredentials: true })
       setCreateResult({ ok: true, text: 'Template submitted for approval. Check status in a few minutes.' })
-      setCreateForm({ name: '', category: 'MARKETING', language: 'en', body: '' })
+      setCreateForm({ name: '', category: 'MARKETING', language: 'en_US', body: '' })
       fetchTemplates()
     } catch (err) {
       setCreateResult({ ok: false, text: err.response?.data?.error || 'Failed to create template' })
@@ -108,7 +109,7 @@ export default function WhatsAppTemplates() {
       const res = await axios.post('/api/whatsapp/bulk', {
         phones: selectedPhones,
         templateName: selectedTemplate,
-        languageCode: templates.find(t => t.name === selectedTemplate)?.language || 'en',
+        languageCode: templates.find(t => t.name === selectedTemplate)?.language || 'en_US',
       }, { withCredentials: true })
       setBulkResults(res.data)
       setBulkProgress(null)

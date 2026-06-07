@@ -21,7 +21,7 @@ async function getTemplates() {
 }
 
 // Send a template message to a phone number
-async function sendTemplate(to, templateName, languageCode = 'en', components = []) {
+async function sendTemplate(to, templateName, languageCode = 'en_US', components = []) {
   // Normalize phone: ensure it starts with country code, no +
   const phone = to.replace(/\D/g, '').replace(/^0+/, '');
   const res = await client().post(`/${PHONE_ID()}/messages`, {
@@ -38,7 +38,7 @@ async function sendTemplate(to, templateName, languageCode = 'en', components = 
 }
 
 // Send a bulk template to multiple phone numbers
-async function sendBulkTemplate(phones, templateName, languageCode = 'en', components = []) {
+async function sendBulkTemplate(phones, templateName, languageCode = 'en_US', components = []) {
   const results = [];
   for (const phone of phones) {
     try {

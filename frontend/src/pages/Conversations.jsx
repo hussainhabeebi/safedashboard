@@ -58,7 +58,8 @@ export default function Conversations() {
     axios.get(`/api/conversations/${selected.id}/messages`, { withCredentials: true })
       .then(res => {
         const msgs = res.data?.payload ?? res.data?.data?.payload ?? res.data ?? []
-        setMessages(Array.isArray(msgs) ? msgs.sort((a, b) => a.created_at - b.created_at) : [])
+        const arr = Array.isArray(msgs) ? msgs : (msgs?.messages ?? [])
+        setMessages(arr.sort((a, b) => a.created_at - b.created_at))
       })
       .catch(() => {})
       .finally(() => setLoadingMsgs(false))
@@ -92,7 +93,8 @@ export default function Conversations() {
     setMessages(prev => [...prev, tempMsg])
     try {
       const res = await axios.post(`/api/conversations/${selected.id}/messages`, { content }, { withCredentials: true })
-      setMessages(prev => prev.map(m => m.id === tempMsg.id ? (res.data?.payload ?? res.data ?? m) : m))
+      const sent = res.data?.payload ?? res.data ?? tempMsg
+      setMessages(prev => prev.map(m => m.id === tempMsg.id ? (sent?.id ? sent : tempMsg) : m))
     } catch {
       setMessages(prev => prev.filter(m => m.id !== tempMsg.id))
       setReply(content)
