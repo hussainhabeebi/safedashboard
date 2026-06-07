@@ -10,6 +10,7 @@ const leadsRoutes = require('./routes/leads');
 const conversationsRoutes = require('./routes/conversations');
 const statsRoutes = require('./routes/stats');
 const configRoutes = require('./routes/config');
+const analyticsRoutes = require('./routes/analytics');
 const authMiddleware = require('./middleware/auth');
 
 const app = express();
@@ -47,6 +48,7 @@ app.use('/api/leads', authMiddleware, leadsRoutes);
 app.use('/api/conversations', authMiddleware, conversationsRoutes);
 app.use('/api/stats', authMiddleware, statsRoutes);
 app.use('/api/config', authMiddleware, configRoutes);
+app.use('/api/analytics', authMiddleware, analyticsRoutes);
 
 app.get('/api/me', authMiddleware, (req, res) => {
   res.json({ username: req.user.username });

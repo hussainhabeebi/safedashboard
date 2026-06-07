@@ -11,12 +11,44 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/contacts', async (req, res) => {
+  try {
+    const { page = 1, search = '' } = req.query;
+    const data = await chatwoot.getContacts(Number(page), search);
+    res.json(data);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch contacts' });
+  }
+});
+
+router.get('/contacts/:id/conversations', async (req, res) => {
+  try {
+    const data = await chatwoot.getContactConversations(req.params.id);
+    res.json(data);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch contact conversations' });
+  }
+});
+
 router.get('/:id/messages', async (req, res) => {
   try {
     const data = await chatwoot.getMessages(req.params.id);
     res.json(data);
   } catch {
     res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+router.post('/:id/messages', async (req, res) => {
+  try {
+    const { content } = req.body;
+    if (!content || !content.trim()) {
+      return res.status(400).json({ error: 'content is required' });
+    }
+    const data = await chatwoot.sendMessage(req.params.id, content.trim());
+    res.json(data);
+  } catch {
+    res.status(500).json({ error: 'Failed to send message' });
   }
 });
 

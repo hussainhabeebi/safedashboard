@@ -6,6 +6,8 @@ const NAV = [
   { path: '/dashboard',     label: 'Dashboard',     icon: '📊' },
   { path: '/leads',         label: 'Leads',          icon: '👥' },
   { path: '/conversations', label: 'Conversations',  icon: '💬' },
+  { path: '/contacts',      label: 'Contacts',       icon: '📋' },
+  { path: '/analytics',     label: 'Analytics',      icon: '📈' },
   { path: '/bot-control',   label: 'Bot Control',    icon: '🤖' },
 ]
 

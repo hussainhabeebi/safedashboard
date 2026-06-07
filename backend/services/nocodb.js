@@ -47,11 +47,6 @@ async function updateLead(id, data) {
 
 async function getTodayStats() {
   const today = new Date().toISOString().slice(0, 10);
-  const params = {
-    where: `(CreatedAt,gte,${today})`,
-    limit: 1,
-    count: true,
-  };
   try {
     const res = await client().get(
       `/api/v1/db/data/noco/${BASE()}/${LEADS()}/count`,
@@ -59,7 +54,6 @@ async function getTodayStats() {
     );
     return { newLeadsToday: res.data.count ?? 0 };
   } catch {
-    // Fallback: fetch all and count
     const res = await client().get(
       `/api/v1/db/data/noco/${BASE()}/${LEADS()}`,
       { params: { where: `(CreatedAt,gte,${today})`, limit: 1000 } }
@@ -67,6 +61,62 @@ async function getTodayStats() {
     const rows = res.data?.list ?? res.data?.records ?? [];
     return { newLeadsToday: rows.length };
   }
+}
+
+async function getLeadsAnalytics() {
+  // Fetch up to 1000 leads for client-side aggregation
+  const res = await client().get(
+    `/api/v1/db/data/noco/${BASE()}/${LEADS()}`,
+    { params: { limit: 1000, sort: '-CreatedAt' } }
+  );
+  const rows = res.data?.list ?? res.data?.records ?? [];
+
+  // By status
+  const byStatus = {};
+  for (const r of rows) {
+    const s = r.Status || r.status || 'Unknown';
+    byStatus[s] = (byStatus[s] || 0) + 1;
+  }
+
+  // By interest/insurance type
+  const byInterest = {};
+  for (const r of rows) {
+    const interest = r.Interest || r.interest || r.InsuranceType || r.insurance_type || 'Unknown';
+    byInterest[interest] = (byInterest[interest] || 0) + 1;
+  }
+
+  // By language
+  const byLanguage = {};
+  for (const r of rows) {
+    const lang = r.Language || r.language || 'Unknown';
+    byLanguage[lang] = (byLanguage[lang] || 0) + 1;
+  }
+
+  // Leads per day for last 30 days
+  const now = new Date();
+  const byDate = {};
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    byDate[d.toISOString().slice(0, 10)] = 0;
+  }
+  for (const r of rows) {
+    const createdAt = r.CreatedAt || r.created_at || r.createdAt;
+    if (!createdAt) continue;
+    const d = new Date(createdAt).toISOString().slice(0, 10);
+    if (d in byDate) byDate[d]++;
+  }
+
+  // Last 7 days for dashboard
+  const last7Days = {};
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    last7Days[key] = byDate[key] ?? 0;
+  }
+
+  return { byStatus, byInterest, byLanguage, byDate, last7Days, total: rows.length };
 }
 
 async function getConfig() {
@@ -79,11 +129,9 @@ async function getConfig() {
 }
 
 async function updateConfig(data) {
-  // Get first row ID then patch it
   const config = await getConfig();
   const id = config.Id || config.id;
   if (!id) {
-    // Create if doesn't exist
     const res = await client().post(
       `/api/v1/db/data/noco/${BASE()}/${CONFIG()}`,
       data
@@ -97,4 +145,4 @@ async function updateConfig(data) {
   return res.data;
 }
 
-module.exports = { getLeads, updateLead, getTodayStats, getConfig, updateConfig };
+module.exports = { getLeads, updateLead, getTodayStats, getLeadsAnalytics, getConfig, updateConfig };

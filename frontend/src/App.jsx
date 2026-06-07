@@ -5,6 +5,8 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Leads from './pages/Leads'
 import Conversations from './pages/Conversations'
+import Contacts from './pages/Contacts'
+import Analytics from './pages/Analytics'
 import BotControl from './pages/BotControl'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -28,6 +30,8 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/leads" element={<Leads />} />
           <Route path="/conversations" element={<Conversations />} />
+          <Route path="/contacts" element={<Contacts />} />
+          <Route path="/analytics" element={<Analytics />} />
           <Route path="/bot-control" element={<BotControl />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
