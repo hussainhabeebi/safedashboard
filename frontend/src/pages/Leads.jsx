@@ -42,8 +42,8 @@ export default function Leads() {
   async function handleStatusChange(id, newStatus) {
     setSaving(id)
     try {
-      await axios.patch(`/api/leads/${id}`, { Status: newStatus }, { withCredentials: true })
-      setLeads(prev => prev.map(l => l.Id === id ? { ...l, Status: newStatus } : l))
+      await axios.patch(`/api/leads/${id}`, { Stage: newStatus }, { withCredentials: true })
+      setLeads(prev => prev.map(l => (l.id || l.Id) === id ? { ...l, stage: newStatus, Stage: newStatus } : l))
     } catch {}
     setSaving(null)
   }
@@ -99,58 +99,63 @@ export default function Leads() {
                 <tr><td colSpan={isMobile ? 4 : 7} style={{ padding: 32, textAlign: 'center', color: '#888' }}>Loading...</td></tr>
               ) : leads.length === 0 ? (
                 <tr><td colSpan={isMobile ? 4 : 7} style={{ padding: 32, textAlign: 'center', color: '#888' }}>No leads found</td></tr>
-              ) : leads.map(lead => (
-                <React.Fragment key={lead.Id}>
+              ) : leads.map(lead => {
+                const lid = lead.id || lead['SL NO'] || lead.Id
+                const lname = lead.name || lead.Name || '—'
+                const lphone = lead.phone || lead['Phone Number'] || lead.Phone || '—'
+                const lstage = lead.stage || lead.Stage || lead.Status || 'New'
+                const ldegree = lead.degree || lead.Degree || lead.Interest || ''
+                const llang = lead.language || lead.Language || ''
+                const lstate = lead.state || lead.State || lead.detected_state || ''
+                const lgulf = lead.gulf || lead.Is_Gulf || ''
+                return (
+                <React.Fragment key={lid}>
                   <tr
                     style={{ borderTop: '1px solid #f0f0f0', cursor: 'pointer' }}
-                    onClick={() => setExpanded(expanded === lead.Id ? null : lead.Id)}
+                    onClick={() => setExpanded(expanded === lid ? null : lid)}
                   >
-                    <td style={{ padding: '12px 16px', fontSize: 14, fontWeight: 500 }}>{lead.Name || '—'}</td>
-                    <td style={{ padding: '12px 16px', fontSize: 14, color: '#555' }}>{lead.Phone || '—'}</td>
-                    {!isMobile && <td style={{ padding: '12px 16px', fontSize: 14, color: '#555' }}>{lead.Interest || '—'}</td>}
-                    {!isMobile && <td style={{ padding: '12px 16px', fontSize: 14, color: '#555' }}>{lead.interest_level || '—'}</td>}
+                    <td style={{ padding: '12px 16px', fontSize: 14, fontWeight: 500 }}>{lname}</td>
+                    <td style={{ padding: '12px 16px', fontSize: 14, color: '#555' }}>{lphone}</td>
+                    {!isMobile && <td style={{ padding: '12px 16px', fontSize: 14, color: '#555' }}>{ldegree || '—'}</td>}
+                    {!isMobile && <td style={{ padding: '12px 16px', fontSize: 14, color: '#555' }}>{lgulf ? `Gulf: ${lgulf}` : lstate || '—'}</td>}
                     <td style={{ padding: '12px 16px' }} onClick={e => e.stopPropagation()}>
                       <select
-                        value={lead.Status || 'New'}
-                        onChange={e => handleStatusChange(lead.Id, e.target.value)}
-                        disabled={saving === lead.Id}
+                        value={lstage}
+                        onChange={e => handleStatusChange(lid, e.target.value)}
+                        disabled={saving === lid}
                         style={{
                           padding: '4px 8px',
                           borderRadius: 6,
-                          border: `1.5px solid ${STATUS_COLOR[lead.Status] || '#6b7280'}`,
-                          background: `${STATUS_COLOR[lead.Status] || '#6b7280'}15`,
-                          color: STATUS_COLOR[lead.Status] || '#6b7280',
+                          border: `1.5px solid ${STATUS_COLOR[lstage] || '#6b7280'}`,
+                          background: `${STATUS_COLOR[lstage] || '#6b7280'}15`,
+                          color: STATUS_COLOR[lstage] || '#6b7280',
                           fontWeight: 600, fontSize: 12, cursor: 'pointer', outline: 'none',
                         }}
                       >
                         {STATUSES.filter(s => s !== 'All').map(s => <option key={s}>{s}</option>)}
                       </select>
                     </td>
-                    {!isMobile && <td style={{ padding: '12px 16px', fontSize: 13, color: '#888' }}>
-                      {lead.UpdatedAt ? new Date(lead.UpdatedAt).toLocaleDateString('en-IN') : '—'}
-                    </td>}
+                    {!isMobile && <td style={{ padding: '12px 16px', fontSize: 13, color: '#888' }}>—</td>}
                     <td style={{ padding: '12px 16px', fontSize: 12, color: '#1a5c3a' }}>
-                      {expanded === lead.Id ? '▲' : '▼'}
+                      {expanded === lid ? '▲' : '▼'}
                     </td>
                   </tr>
-                  {expanded === lead.Id && (
+                  {expanded === lid && (
                     <tr style={{ background: '#f9fafb', borderTop: '1px solid #f0f0f0' }}>
                       <td colSpan={isMobile ? 4 : 7} style={{ padding: '16px 24px' }}>
-                        <div style={{ fontSize: 13, color: '#555' }}>
-                          <strong style={{ color: '#1a5c3a' }}>Notes:</strong>{' '}
-                          {lead.Notes || lead.notes || 'No notes available.'}
-                        </div>
-                        <div style={{ fontSize: 13, color: '#888', marginTop: 8, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-                          <span><strong>Stage:</strong> {lead.Stage || '—'}</span>
-                          <span><strong>Language:</strong> {lead.Language || '—'}</span>
-                          <span><strong>Location:</strong> {lead.detected_state || '—'}</span>
-                          <span><strong>Created:</strong> {lead.CreatedAt ? new Date(lead.CreatedAt).toLocaleDateString('en-IN') : '—'}</span>
+                        <div style={{ fontSize: 13, color: '#888', marginTop: 4, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+                          <span><strong>Stage:</strong> {lstage}</span>
+                          <span><strong>Language:</strong> {llang || '—'}</span>
+                          <span><strong>State:</strong> {lstate || '—'}</span>
+                          <span><strong>Gulf:</strong> {lgulf || '—'}</span>
+                          <span><strong>Eligible:</strong> {lead.eligible || lead.Eligible || '—'}</span>
+                          <span><strong>Invite Sent:</strong> {lead.inviteSent || lead.Invite_Sent || '—'}</span>
                         </div>
                       </td>
                     </tr>
                   )}
                 </React.Fragment>
-              ))}
+                )})}
             </tbody>
           </table>
         </div>

@@ -1,29 +1,25 @@
 const express = require('express');
 const router = express.Router();
-const nocodb = require('../services/nocodb');
-const chatwoot = require('../services/chatwoot');
+const n8n = require('../services/n8n');
 
 router.get('/', async (req, res) => {
   try {
-    const [analyticsResult, cwResult] = await Promise.allSettled([
-      nocodb.getLeadsAnalytics(),
-      chatwoot.getTodayStats(),
-    ]);
-
-    const analytics = analyticsResult.status === 'fulfilled' ? analyticsResult.value : {};
-    const cw        = cwResult.status         === 'fulfilled' ? cwResult.value        : {};
-
+    const data = await n8n.getAnalytics();
+    // n8n returns: { total, eligible, invited, gulf, byStage, byState, byDegree, byCountry }
     res.json({
-      leadsByStatus:     analytics.byStatus   ?? {},
-      leadsByInterest:   analytics.byInterest ?? {},
-      leadsByDate:       analytics.byDate     ?? {},
-      leadsLast7Days:    analytics.last7Days  ?? {},
-      leadsByLanguage:   analytics.byLanguage ?? {},
-      totalLeads:        analytics.total      ?? 0,
-      conversationsByStatus: cw.conversationsByStatus ?? { open: 0, resolved: 0, pending: 0 },
+      totalLeads:          data.total      ?? 0,
+      eligible:            data.eligible   ?? 0,
+      invited:             data.invited    ?? 0,
+      gulf:                data.gulf       ?? 0,
+      leadsByStatus:       data.byStage    ?? {},
+      leadsByState:        data.byState    ?? {},
+      leadsByDegree:       data.byDegree   ?? {},
+      byCountry:           data.byCountry  ?? {},
+      // Chatwoot stats not available via n8n analytics endpoint
+      conversationsByStatus: { open: 0, resolved: 0, pending: 0 },
     });
   } catch (err) {
-    console.error(err);
+    console.error('[analytics] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch analytics' });
   }
 });

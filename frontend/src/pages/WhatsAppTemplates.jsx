@@ -83,23 +83,21 @@ export default function WhatsAppTemplates() {
     setLoadingLeads(true)
     try {
       const params = new URLSearchParams({ limit: 1000 })
-      if (selectedStatuses.length < LEAD_STATUSES.length) {
-        // filter by selected statuses — fetch each and merge
-        const all = []
+      const all = []
+      if (selectedStatuses.length && selectedStatuses.length < LEAD_STATUSES.length) {
         for (const s of selectedStatuses) {
           const res = await axios.get(`/api/leads?${params}&filter=${s}`, { withCredentials: true })
           const rows = res.data?.list ?? res.data?.records ?? []
           all.push(...(Array.isArray(rows) ? rows : []))
         }
-        setLeads(all)
-        setSelectedPhones(all.filter(l => l.Phone).map(l => l.Phone))
       } else {
         const res = await axios.get(`/api/leads?${params}`, { withCredentials: true })
         const rows = res.data?.list ?? res.data?.records ?? []
-        const valid = Array.isArray(rows) ? rows : []
-        setLeads(valid)
-        setSelectedPhones(valid.filter(l => l.Phone).map(l => l.Phone))
+        all.push(...(Array.isArray(rows) ? rows : []))
       }
+      setLeads(all)
+      // select all phones by default
+      setSelectedPhones(all.filter(l => l.phone || l['Phone Number']).map(l => l.phone || l['Phone Number']))
     } catch {}
     setLoadingLeads(false)
   }
@@ -109,11 +107,23 @@ export default function WhatsAppTemplates() {
     setBulkSending(true)
     setBulkResults(null)
     setBulkProgress(`Sending to ${selectedPhones.length} contacts...`)
+    // Build lead objects for n8n (it builds template vars from name/state/degree etc.)
+    const selectedLeads = leads
+      .filter(l => selectedPhones.includes(l.phone || l['Phone Number']))
+      .map(l => ({
+        slno:    l.id || l['SL NO'] || '',
+        name:    l.name || l.Name || '',
+        phone:   l.phone || l['Phone Number'] || '',
+        state:   l.state || l.State || '',
+        degree:  l.degree || l.Degree || '',
+        is_gulf: l.gulf || l.Is_Gulf || '',
+      }))
     try {
+      const tpl = templates.find(t => t.name === selectedTemplate)
       const res = await axios.post('/api/whatsapp/bulk', {
-        phones: selectedPhones,
+        leads: selectedLeads,
         templateName: selectedTemplate,
-        languageCode: templates.find(t => t.name === selectedTemplate)?.language || 'en_US',
+        language: tpl?.language || 'en_US',
       }, { withCredentials: true })
       setBulkResults(res.data)
       setBulkProgress(null)
@@ -130,7 +140,8 @@ export default function WhatsAppTemplates() {
 
   const approvedTemplates = templates.filter(t => t.status === 'APPROVED')
   const selectedTemplateObj = templates.find(t => t.name === selectedTemplate)
-  const templateBody = selectedTemplateObj?.components?.find(c => c.type === 'BODY')?.text || ''
+  // n8n shapes templates with top-level `body` field
+  const templateBody = selectedTemplateObj?.body || selectedTemplateObj?.components?.find(c => c.type === 'BODY')?.text || ''
 
   return (
     <Layout>
@@ -233,7 +244,7 @@ export default function WhatsAppTemplates() {
                   </thead>
                   <tbody>
                     {templates.map(t => {
-                      const body = t.components?.find(c => c.type === 'BODY')?.text || '—'
+                      const body = t.body || t.components?.find(c => c.type === 'BODY')?.text || '—'
                       const ss = STATUS_STYLE[t.status] || { bg: '#f3f4f6', color: '#888' }
                       return (
                         <tr key={t.id || t.name} style={{ borderTop: '1px solid #f0f0f0' }}>
@@ -317,9 +328,9 @@ export default function WhatsAppTemplates() {
               {leads.length > 0 && (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                    <span style={{ fontSize: 13, color: '#888' }}>{selectedPhones.length} of {leads.filter(l => l.Phone).length} selected</span>
+                    <span style={{ fontSize: 13, color: '#888' }}>{selectedPhones.length} of {leads.filter(l => l.phone || l['Phone Number']).length} selected</span>
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={() => setSelectedPhones(leads.filter(l => l.Phone).map(l => l.Phone))}
+                      <button onClick={() => setSelectedPhones(leads.filter(l => l.phone || l['Phone Number']).map(l => l.phone || l['Phone Number']))}
                         style={{ padding: '5px 12px', border: '1px solid #ddd', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }}>Select All</button>
                       <button onClick={() => setSelectedPhones([])}
                         style={{ padding: '5px 12px', border: '1px solid #ddd', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }}>Deselect All</button>
@@ -335,16 +346,18 @@ export default function WhatsAppTemplates() {
                         </tr>
                       </thead>
                       <tbody>
-                        {leads.filter(l => l.Phone).map((lead, i) => (
-                          <tr key={lead.Id || i} style={{ borderTop: '1px solid #f5f5f5', background: selectedPhones.includes(lead.Phone) ? '#f8fff8' : 'transparent' }}>
+                        {leads.filter(l => l.phone || l['Phone Number']).map((lead, i) => {
+                          const lphone = lead.phone || lead['Phone Number']
+                          return (
+                          <tr key={lead.id || lead['SL NO'] || i} style={{ borderTop: '1px solid #f5f5f5', background: selectedPhones.includes(lphone) ? '#f8fff8' : 'transparent' }}>
                             <td style={{ padding: '8px 12px' }}>
-                              <input type="checkbox" checked={selectedPhones.includes(lead.Phone)} onChange={() => togglePhone(lead.Phone)} />
+                              <input type="checkbox" checked={selectedPhones.includes(lphone)} onChange={() => togglePhone(lphone)} />
                             </td>
-                            <td style={{ padding: '8px 12px', fontSize: 13 }}>{lead.Name || '—'}</td>
-                            <td style={{ padding: '8px 12px', fontSize: 13, fontFamily: 'monospace' }}>{lead.Phone}</td>
-                            <td style={{ padding: '8px 12px', fontSize: 12, color: '#888' }}>{lead.Status || '—'}</td>
+                            <td style={{ padding: '8px 12px', fontSize: 13 }}>{lead.name || lead.Name || '—'}</td>
+                            <td style={{ padding: '8px 12px', fontSize: 13, fontFamily: 'monospace' }}>{lphone}</td>
+                            <td style={{ padding: '8px 12px', fontSize: 12, color: '#888' }}>{lead.stage || lead.Stage || '—'}</td>
                           </tr>
-                        ))}
+                        )})}
                       </tbody>
                     </table>
                   </div>

@@ -1,15 +1,61 @@
 const express = require('express');
 const router = express.Router();
-const chatwoot = require('../services/chatwoot');
+const n8n = require('../services/n8n');
 
 router.get('/', async (req, res) => {
   try {
-    const data = await chatwoot.getConversations();
+    const data = await n8n.getConversations();
     res.json(data);
-  } catch {
+  } catch (err) {
+    console.error('[conversations] list error:', err.message);
     res.status(500).json({ error: 'Failed to fetch conversations' });
   }
 });
+
+router.get('/:id/messages', async (req, res) => {
+  try {
+    const msgs = await n8n.getMessages(req.params.id);
+    res.json({ payload: msgs });
+  } catch (err) {
+    console.error('[conversations] messages error:', err.message);
+    res.status(500).json({ error: err.message || 'Failed to fetch messages' });
+  }
+});
+
+router.post('/:id/messages', async (req, res) => {
+  try {
+    const { content } = req.body;
+    if (!content?.trim()) return res.status(400).json({ error: 'content is required' });
+    const data = await n8n.sendReply(req.params.id, content.trim());
+    res.json({ payload: data });
+  } catch (err) {
+    console.error('[conversations] send reply error:', err.message);
+    res.status(500).json({ error: 'Failed to send message' });
+  }
+});
+
+router.post('/:id/handover', async (req, res) => {
+  try {
+    const data = await n8n.toggleStatus(req.params.id, 'open');
+    res.json(data);
+  } catch (err) {
+    console.error('[conversations] handover error:', err.message);
+    res.status(500).json({ error: 'Failed to handover conversation' });
+  }
+});
+
+router.post('/:id/toggle-status', async (req, res) => {
+  try {
+    const { status = 'resolved' } = req.body;
+    const data = await n8n.toggleStatus(req.params.id, status);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to toggle status' });
+  }
+});
+
+// Contacts — still use Chatwoot directly (not in n8n workflow)
+const chatwoot = require('../services/chatwoot');
 
 router.get('/contacts', async (req, res) => {
   try {
@@ -27,39 +73,6 @@ router.get('/contacts/:id/conversations', async (req, res) => {
     res.json(data);
   } catch {
     res.status(500).json({ error: 'Failed to fetch contact conversations' });
-  }
-});
-
-router.get('/:id/messages', async (req, res) => {
-  try {
-    const data = await chatwoot.getMessages(req.params.id);
-    console.log(`[messages] conv ${req.params.id} payload length:`, data?.payload?.length, 'sample:', JSON.stringify(data?.payload?.[0])?.slice(0, 200));
-    res.json(data);
-  } catch (err) {
-    console.error('[messages] error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data?.message || err.message || 'Failed to fetch messages' });
-  }
-});
-
-router.post('/:id/messages', async (req, res) => {
-  try {
-    const { content } = req.body;
-    if (!content || !content.trim()) {
-      return res.status(400).json({ error: 'content is required' });
-    }
-    const data = await chatwoot.sendMessage(req.params.id, content.trim());
-    res.json(data);
-  } catch {
-    res.status(500).json({ error: 'Failed to send message' });
-  }
-});
-
-router.post('/:id/handover', async (req, res) => {
-  try {
-    const data = await chatwoot.assignToAgent(req.params.id);
-    res.json(data);
-  } catch {
-    res.status(500).json({ error: 'Failed to handover conversation' });
   }
 });
 

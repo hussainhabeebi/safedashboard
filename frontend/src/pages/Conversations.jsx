@@ -3,6 +3,9 @@ import axios from 'axios'
 import Sidebar from '../components/Sidebar'
 import useIsMobile from '../hooks/useIsMobile'
 
+// n8n shapes convs: { id:'C-123', rawId:123, contactName, contactPhone, status, unread, lastTs, preview, assigned }
+// assigned is null or first-name string e.g. 'rasi'
+
 const STATUS_STYLE = {
   open:     { bg: '#e8f5e9', color: '#1a5c3a', label: 'Open' },
   resolved: { bg: '#f3f4f6', color: '#6b7280', label: 'Resolved' },
@@ -31,8 +34,8 @@ export default function Conversations() {
   useEffect(() => {
     axios.get('/api/conversations', { withCredentials: true })
       .then(res => {
-        const items = res.data?.data?.payload ?? res.data?.payload ?? res.data ?? []
-        setConversations(Array.isArray(items) ? items : [])
+        const items = Array.isArray(res.data) ? res.data : []
+        setConversations(items)
       })
       .catch(err => setListError(err.response?.data?.error || 'Failed to load conversations'))
       .finally(() => setLoadingList(false))
@@ -40,14 +43,14 @@ export default function Conversations() {
 
   useEffect(() => {
     let list = [...conversations]
-    if (filter === 'bot')        list = list.filter(c => !c.meta?.assignee)
-    else if (filter === 'human') list = list.filter(c => !!c.meta?.assignee)
+    if (filter === 'bot')        list = list.filter(c => !c.assigned)
+    else if (filter === 'human') list = list.filter(c => !!c.assigned)
     else if (filter !== 'all')   list = list.filter(c => c.status === filter)
     if (search.trim()) {
       const q = search.toLowerCase()
       list = list.filter(c =>
-        (c.meta?.sender?.name || '').toLowerCase().includes(q) ||
-        (c.meta?.sender?.phone_number || '').includes(q)
+        (c.contactName || '').toLowerCase().includes(q) ||
+        (c.contactPhone || '').includes(q)
       )
     }
     setFiltered(list)
@@ -60,8 +63,8 @@ export default function Conversations() {
     setMessages([])
     axios.get(`/api/conversations/${selected.id}/messages`, { withCredentials: true })
       .then(res => {
-        const msgs = res.data?.payload ?? res.data?.data?.payload ?? res.data ?? []
-        const arr = Array.isArray(msgs) ? msgs : (msgs?.messages ?? [])
+        const msgs = res.data?.payload ?? res.data ?? []
+        const arr = Array.isArray(msgs) ? msgs : []
         setMessages(arr.sort((a, b) => a.created_at - b.created_at))
       })
       .catch(err => setMsgsError(err.response?.data?.error || 'Failed to load messages'))
@@ -81,8 +84,8 @@ export default function Conversations() {
     setHandingOver(true)
     try {
       await axios.post(`/api/conversations/${id}/handover`, {}, { withCredentials: true })
-      setConversations(prev => prev.map(c => c.id === id ? { ...c, meta: { ...c.meta, assignee: { name: 'Rasi' } } } : c))
-      setSelected(prev => prev?.id === id ? { ...prev, meta: { ...prev.meta, assignee: { name: 'Rasi' } } } : prev)
+      setConversations(prev => prev.map(c => c.id === id ? { ...c, assigned: 'rasi' } : c))
+      setSelected(prev => prev?.id === id ? { ...prev, assigned: 'rasi' } : prev)
     } catch {}
     setHandingOver(false)
   }
@@ -95,9 +98,7 @@ export default function Conversations() {
     const tempMsg = { id: Date.now(), content, message_type: 'outgoing', created_at: Math.floor(Date.now() / 1000) }
     setMessages(prev => [...prev, tempMsg])
     try {
-      const res = await axios.post(`/api/conversations/${selected.id}/messages`, { content }, { withCredentials: true })
-      const sent = res.data?.payload ?? res.data ?? tempMsg
-      setMessages(prev => prev.map(m => m.id === tempMsg.id ? (sent?.id ? sent : tempMsg) : m))
+      await axios.post(`/api/conversations/${selected.id}/messages`, { content }, { withCredentials: true })
     } catch {
       setMessages(prev => prev.filter(m => m.id !== tempMsg.id))
       setReply(content)
@@ -105,7 +106,6 @@ export default function Conversations() {
     setSending(false)
   }
 
-  const isHuman = c => !!c?.meta?.assignee
   const sStyle = c => STATUS_STYLE[c.status] || STATUS_STYLE.open
   const showList   = !isMobile || mobileView === 'list'
   const showThread = !isMobile || mobileView === 'thread'
@@ -149,17 +149,18 @@ export default function Conversations() {
                   borderLeft: selected?.id === c.id ? '3px solid #1a5c3a' : '3px solid transparent',
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 3 }}>
-                    <span style={{ fontWeight: 600, fontSize: 13, color: '#222' }}>{c.meta?.sender?.name || 'Unknown'}</span>
+                    <span style={{ fontWeight: 600, fontSize: 13, color: '#222' }}>{c.contactName || 'Unknown'}</span>
                     <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 8, background: sStyle(c).bg, color: sStyle(c).color, fontWeight: 600 }}>{sStyle(c).label}</span>
                   </div>
-                  <div style={{ fontSize: 12, color: '#888', marginBottom: 2 }}>{c.meta?.sender?.phone_number || ''}</div>
+                  <div style={{ fontSize: 12, color: '#888', marginBottom: 2 }}>{c.contactPhone || ''}</div>
+                  {c.preview && (
+                    <div style={{ fontSize: 11, color: '#aaa', marginBottom: 4, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{c.preview}</div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 11, padding: '1px 6px', borderRadius: 8, background: isHuman(c) ? '#fff3cd' : '#e8f5e9', color: isHuman(c) ? '#856404' : '#1a5c3a' }}>
-                      {isHuman(c) ? '👤 Human' : '🤖 Bot'}
+                    <span style={{ fontSize: 11, padding: '1px 6px', borderRadius: 8, background: c.assigned ? '#fff3cd' : '#e8f5e9', color: c.assigned ? '#856404' : '#1a5c3a' }}>
+                      {c.assigned ? `👤 ${c.assigned}` : '🤖 Bot'}
                     </span>
-                    <span style={{ fontSize: 11, color: '#aaa' }}>
-                      {c.last_activity_at ? new Date(c.last_activity_at * 1000).toLocaleDateString('en-IN') : ''}
-                    </span>
+                    <span style={{ fontSize: 11, color: '#aaa' }}>{c.lastTs || ''}</span>
                   </div>
                 </div>
               ))}
@@ -187,15 +188,15 @@ export default function Conversations() {
                       </button>
                     )}
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 14 }}>{selected.meta?.sender?.name || 'Unknown'}</div>
-                      <div style={{ fontSize: 12, color: '#888' }}>{selected.meta?.sender?.phone_number}</div>
+                      <div style={{ fontWeight: 700, fontSize: 14 }}>{selected.contactName || 'Unknown'}</div>
+                      <div style={{ fontSize: 12, color: '#888' }}>{selected.contactPhone}</div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20, background: isHuman(selected) ? '#fff3cd' : '#e8f5e9', color: isHuman(selected) ? '#856404' : '#1a5c3a' }}>
-                      {isHuman(selected) ? '👤 Human' : '🤖 Bot'}
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20, background: selected.assigned ? '#fff3cd' : '#e8f5e9', color: selected.assigned ? '#856404' : '#1a5c3a' }}>
+                      {selected.assigned ? `👤 ${selected.assigned}` : '🤖 Bot'}
                     </span>
-                    {!isHuman(selected) && (
+                    {!selected.assigned && (
                       <button onClick={() => handleHandover(selected.id)} disabled={handingOver} style={{
                         padding: '6px 12px', background: '#1a5c3a', color: '#fff', border: 'none',
                         borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: handingOver ? 'not-allowed' : 'pointer',

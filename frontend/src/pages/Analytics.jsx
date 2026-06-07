@@ -81,7 +81,7 @@ export default function Analytics() {
     </Layout>
   )
 
-  const { leadsByStatus = {}, leadsByInterest = {}, leadsByDate = {}, leadsByLanguage = {}, totalLeads = 0, conversationsByStatus = {} } = data || {}
+  const { leadsByStatus = {}, leadsByState = {}, leadsByDegree = {}, totalLeads = 0, eligible = 0, invited = 0, gulf = 0 } = data || {}
 
   return (
     <Layout>
@@ -94,9 +94,9 @@ export default function Analytics() {
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fill, minmax(160px, 1fr))', gap: 16, marginBottom: 32 }}>
           {[
             { label: 'Total Leads', value: totalLeads, color: '#1a5c3a' },
-            { label: 'Open Chats', value: conversationsByStatus.open ?? 0, color: '#3b82f6' },
-            { label: 'Resolved', value: conversationsByStatus.resolved ?? 0, color: '#10b981' },
-            { label: 'Pending', value: conversationsByStatus.pending ?? 0, color: '#f59e0b' },
+            { label: 'Eligible', value: eligible, color: '#3b82f6' },
+            { label: 'Invited', value: invited, color: '#10b981' },
+            { label: 'Gulf', value: gulf, color: '#f59e0b' },
           ].map(item => (
             <div key={item.label} style={{ background: '#fff', borderRadius: 12, padding: '18px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               <div style={{ fontSize: 11, color: '#888', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>{item.label}</div>
@@ -106,38 +106,32 @@ export default function Analytics() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 24, marginBottom: 24 }}>
-          {/* Lead Pipeline */}
+          {/* Lead Pipeline by Stage */}
           <div style={{ background: '#fff', borderRadius: 12, padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-            <BarChart data={leadsByStatus} colorMap={STATUS_COLORS} title="Lead Pipeline by Status" />
+            <BarChart data={leadsByStatus} colorMap={STATUS_COLORS} title="Lead Pipeline by Stage" />
           </div>
 
-          {/* Insurance Interest */}
+          {/* By State */}
           <div style={{ background: '#fff', borderRadius: 12, padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-            <BarChart data={leadsByInterest} title="Insurance Interest Breakdown" />
+            <BarChart data={leadsByState} title="Leads by State" />
           </div>
         </div>
 
-        {/* Leads Over Time */}
+        {/* By Degree */}
         <div style={{ background: '#fff', borderRadius: 12, padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 24 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#1a5c3a', marginBottom: 16 }}>Leads — Last 30 Days</div>
-          {Object.keys(leadsByDate).length > 0 ? <SparkBars data={leadsByDate} /> : <div style={{ color: '#aaa', fontSize: 13 }}>No data</div>}
-        </div>
-
-        {/* Language Distribution */}
-        <div style={{ background: '#fff', borderRadius: 12, padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#1a5c3a', marginBottom: 16 }}>Language Distribution</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#1a5c3a', marginBottom: 16 }}>Leads by Qualification</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            {Object.entries(leadsByLanguage).sort((a, b) => b[1] - a[1]).map(([lang, count]) => (
-              <div key={lang} style={{
+            {Object.entries(leadsByDegree).sort((a, b) => b[1] - a[1]).map(([deg, count]) => (
+              <div key={deg} style={{
                 padding: '6px 14px', borderRadius: 20, background: '#e8f5e9',
                 color: '#1a5c3a', fontSize: 13, fontWeight: 500,
                 display: 'flex', alignItems: 'center', gap: 6,
               }}>
-                {LANG_LABELS[lang] || lang}
+                {deg}
                 <span style={{ background: '#1a5c3a', color: '#fff', borderRadius: 10, padding: '1px 7px', fontSize: 11, fontWeight: 700 }}>{count}</span>
               </div>
             ))}
-            {!Object.keys(leadsByLanguage).length && <div style={{ color: '#aaa', fontSize: 13 }}>No data</div>}
+            {!Object.keys(leadsByDegree).length && <div style={{ color: '#aaa', fontSize: 13 }}>No data</div>}
           </div>
         </div>
     </Layout>
