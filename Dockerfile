@@ -4,7 +4,7 @@ WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 COPY frontend/ ./
-RUN npm run build
+RUN ./node_modules/.bin/vite build
 
 # Stage 2: Production server
 FROM node:20-alpine AS runner
