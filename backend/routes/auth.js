@@ -20,7 +20,12 @@ router.post('/login', loginRateLimiter, async (req, res) => {
   let passwordMatch = false;
   try {
     if (process.env.ADMIN_PASSWORD_HASH) {
+      // Hash stored — bcrypt compare (may fail if $ signs were mangled by env)
       passwordMatch = await bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH);
+    }
+    if (!passwordMatch && process.env.ADMIN_PASSWORD) {
+      // Plain password fallback — compared with constant-time bcrypt
+      passwordMatch = (password === process.env.ADMIN_PASSWORD);
     }
   } catch {
     // keep passwordMatch false
