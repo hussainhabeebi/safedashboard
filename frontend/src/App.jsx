@@ -8,6 +8,7 @@ import Conversations from './pages/Conversations'
 import Contacts from './pages/Contacts'
 import Analytics from './pages/Analytics'
 import BotControl from './pages/BotControl'
+import WhatsAppTemplates from './pages/WhatsAppTemplates'
 import ProtectedRoute from './components/ProtectedRoute'
 
 // Global axios interceptor — redirect to /login on any 401
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/contacts" element={<Contacts />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/bot-control" element={<BotControl />} />
+          <Route path="/whatsapp" element={<WhatsAppTemplates />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

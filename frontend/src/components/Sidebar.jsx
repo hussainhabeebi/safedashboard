@@ -9,6 +9,7 @@ const NAV = [
   { path: '/contacts',      label: 'Contacts',       icon: '📋' },
   { path: '/analytics',     label: 'Analytics',      icon: '📈' },
   { path: '/bot-control',   label: 'Bot Control',    icon: '🤖' },
+  { path: '/whatsapp',      label: 'WhatsApp',       icon: '📱' },
 ]
 
 export default function Sidebar() {

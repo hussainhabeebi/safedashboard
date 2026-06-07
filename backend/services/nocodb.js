@@ -145,4 +145,19 @@ async function updateConfig(data) {
   return res.data;
 }
 
-module.exports = { getLeads, updateLead, getTodayStats, getLeadsAnalytics, getConfig, updateConfig };
+async function getTotalLeads() {
+  try {
+    const res = await client().get(
+      `/api/v1/db/data/noco/${BASE()}/${LEADS()}/count`
+    );
+    return { totalContacts: res.data.count ?? 0 };
+  } catch {
+    const res = await client().get(
+      `/api/v1/db/data/noco/${BASE()}/${LEADS()}`,
+      { params: { limit: 1 } }
+    );
+    return { totalContacts: res.data?.pageInfo?.totalRows ?? res.data?.total ?? 0 };
+  }
+}
+
+module.exports = { getLeads, updateLead, getTodayStats, getTotalLeads, getLeadsAnalytics, getConfig, updateConfig };

@@ -39,10 +39,10 @@ export default function Dashboard() {
 
         {/* Stat Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 20, marginBottom: 40 }}>
-          <StatCard title="New Leads Today"     value={loading ? '...' : stats?.newLeadsToday}   icon="👥" color="#1a5c3a" />
-          <StatCard title="Open Conversations"  value={loading ? '...' : stats?.openConversations} icon="💬" color="#3b82f6" />
+          <StatCard title="New Leads Today"     value={loading ? '...' : stats?.newLeadsToday}    icon="👥" color="#1a5c3a" />
+          <StatCard title="Total Contacts"      value={loading ? '...' : stats?.totalContacts}    icon="📋" color="#3b82f6" />
+          <StatCard title="Open Conversations"  value={loading ? '...' : stats?.openConversations} icon="💬" color="#8b5cf6" />
           <StatCard title="Handovers Today"     value={loading ? '...' : stats?.handoversToday}   icon="🤝" color="#f59e0b" />
-          <StatCard title="Bot Replies"         value={loading ? '...' : stats?.botRepliesToday}  icon="🤖" color="#8b5cf6" />
         </div>
 
         {/* Recent Leads */}

@@ -11,6 +11,7 @@ const conversationsRoutes = require('./routes/conversations');
 const statsRoutes = require('./routes/stats');
 const configRoutes = require('./routes/config');
 const analyticsRoutes = require('./routes/analytics');
+const waRoutes = require('./routes/whatsapp');
 const authMiddleware = require('./middleware/auth');
 
 const app = express();
@@ -49,6 +50,7 @@ app.use('/api/conversations', authMiddleware, conversationsRoutes);
 app.use('/api/stats', authMiddleware, statsRoutes);
 app.use('/api/config', authMiddleware, configRoutes);
 app.use('/api/analytics', authMiddleware, analyticsRoutes);
+app.use('/api/whatsapp', authMiddleware, waRoutes);
 
 app.get('/api/me', authMiddleware, (req, res) => {
   res.json({ username: req.user.username });

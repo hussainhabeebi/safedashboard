@@ -27,7 +27,7 @@ export default function Conversations() {
   useEffect(() => {
     axios.get('/api/conversations', { withCredentials: true })
       .then(res => {
-        const items = res.data?.payload ?? res.data?.data?.payload ?? res.data ?? []
+        const items = res.data?.data?.payload ?? res.data?.payload ?? res.data ?? []
         setConversations(Array.isArray(items) ? items : [])
       })
       .catch(() => {})
@@ -56,7 +56,7 @@ export default function Conversations() {
     setMessages([])
     axios.get(`/api/conversations/${selected.id}/messages`, { withCredentials: true })
       .then(res => {
-        const msgs = res.data?.payload ?? res.data ?? []
+        const msgs = res.data?.payload ?? res.data?.data?.payload ?? res.data ?? []
         setMessages(Array.isArray(msgs) ? msgs.sort((a, b) => a.created_at - b.created_at) : [])
       })
       .catch(() => {})
@@ -153,6 +153,15 @@ export default function Conversations() {
                   </span>
                 </div>
                 <div style={{ fontSize: 12, color: '#888', marginBottom: 2 }}>{c.meta?.sender?.phone_number || ''}</div>
+                {c.last_non_activity_at || c.additional_attributes?.last_seen_at || c.meta?.channel ? null : null}
+                {(() => {
+                  const preview = c.additional_attributes?.mail_subject || c.last_activity_at_message?.content || ''
+                  return preview ? (
+                    <div style={{ fontSize: 12, color: '#aaa', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {preview.length > 40 ? preview.slice(0, 40) + '…' : preview}
+                    </div>
+                  ) : null
+                })()}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 11, color: isHuman(c) ? '#856404' : '#1a5c3a', background: isHuman(c) ? '#fff3cd' : '#e8f5e9', padding: '1px 6px', borderRadius: 8 }}>
                     {isHuman(c) ? '👤 Human' : '🤖 Bot'}
