@@ -13,6 +13,9 @@ export default function BotControl() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [testMsg, setTestMsg] = useState('')
+  const [testing, setTesting] = useState(false)
+  const [testResult, setTestResult] = useState(null)
 
   useEffect(() => {
     axios.get('/api/config', { withCredentials: true })
@@ -27,6 +30,20 @@ export default function BotControl() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
+
+  async function handleTest(e) {
+    e.preventDefault()
+    if (!testMsg.trim()) return
+    setTesting(true)
+    setTestResult(null)
+    try {
+      const res = await axios.post('/api/config/test', { message: testMsg.trim() }, { withCredentials: true })
+      setTestResult({ ok: true, text: `Sent to conversation #${res.data.conversationId}` })
+    } catch (err) {
+      setTestResult({ ok: false, text: err.response?.data?.error || 'Failed to send test message' })
+    }
+    setTesting(false)
+  }
 
   async function handleSave(e) {
     e.preventDefault()
@@ -61,6 +78,33 @@ export default function BotControl() {
         <div style={{ marginBottom: 32 }}>
           <h1 style={{ fontSize: 26, fontWeight: 700, color: '#1a5c3a' }}>Bot Control</h1>
           <p style={{ color: '#888', marginTop: 4, fontSize: 14 }}>Configure the AI assistant behaviour</p>
+        </div>
+
+        {/* Prominent bot status */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 20, padding: '20px 28px',
+          borderRadius: 14, marginBottom: 28,
+          background: config.bot_enabled ? '#e8f5e9' : '#fef2f2',
+          border: `2px solid ${config.bot_enabled ? '#1a5c3a' : '#ef4444'}`,
+        }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: '50%', flexShrink: 0,
+            background: config.bot_enabled ? '#1a5c3a' : '#ef4444',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 26,
+          }}>
+            {config.bot_enabled ? '🟢' : '🔴'}
+          </div>
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: config.bot_enabled ? '#1a5c3a' : '#ef4444' }}>
+              Bot is {config.bot_enabled ? 'ACTIVE' : 'DISABLED'}
+            </div>
+            <div style={{ fontSize: 13, color: '#666', marginTop: 2 }}>
+              {config.bot_enabled
+                ? 'The AI assistant is responding to incoming WhatsApp messages.'
+                : 'The bot is off. Messages will not receive automatic replies.'}
+            </div>
+          </div>
         </div>
 
         <form onSubmit={handleSave} style={{ maxWidth: 760 }}>
