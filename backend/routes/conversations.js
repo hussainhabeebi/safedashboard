@@ -33,9 +33,11 @@ router.get('/contacts/:id/conversations', async (req, res) => {
 router.get('/:id/messages', async (req, res) => {
   try {
     const data = await chatwoot.getMessages(req.params.id);
+    console.log(`[messages] conv ${req.params.id} payload length:`, data?.payload?.length, 'sample:', JSON.stringify(data?.payload?.[0])?.slice(0, 200));
     res.json(data);
-  } catch {
-    res.status(500).json({ error: 'Failed to fetch messages' });
+  } catch (err) {
+    console.error('[messages] error:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data?.message || err.message || 'Failed to fetch messages' });
   }
 });
 

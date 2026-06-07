@@ -34,8 +34,8 @@ async function getMessages(conversationId) {
   const res = await client().get(
     `/api/v1/accounts/${ACCOUNT()}/conversations/${conversationId}/messages`
   );
-  // Chatwoot may return { payload: [...] } or { data: { payload: [...] } }
   const raw = res.data;
+  console.log('[chatwoot getMessages] raw keys:', Object.keys(raw || {}), 'payload type:', typeof raw?.payload, Array.isArray(raw?.payload) ? `array[${raw.payload.length}]` : '');
   const msgs = raw?.payload ?? raw?.data?.payload ?? raw ?? [];
   return { payload: Array.isArray(msgs) ? msgs : [] };
 }
