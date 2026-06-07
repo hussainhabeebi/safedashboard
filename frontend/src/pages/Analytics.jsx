@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import Sidebar from '../components/Sidebar'
+import Layout from '../components/Layout'
+import useIsMobile from '../hooks/useIsMobile'
 
 const STATUS_COLORS = {
   New: '#3b82f6', Warm: '#f59e0b', Quoted: '#10b981',
@@ -63,6 +64,7 @@ function SparkBars({ data }) {
 export default function Analytics() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     axios.get('/api/analytics', { withCredentials: true })
@@ -72,27 +74,24 @@ export default function Analytics() {
   }, [])
 
   if (loading) return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar />
-      <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <Layout>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
         <div style={{ color: '#888' }}>Loading analytics...</div>
-      </main>
-    </div>
+      </div>
+    </Layout>
   )
 
   const { leadsByStatus = {}, leadsByInterest = {}, leadsByDate = {}, leadsByLanguage = {}, totalLeads = 0, conversationsByStatus = {} } = data || {}
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar />
-      <main style={{ flex: 1, padding: '32px 40px', overflow: 'auto' }}>
+    <Layout>
         <div style={{ marginBottom: 28 }}>
           <h1 style={{ fontSize: 26, fontWeight: 700, color: '#1a5c3a' }}>Analytics</h1>
           <p style={{ color: '#888', marginTop: 4, fontSize: 14 }}>Lead pipeline & conversation insights</p>
         </div>
 
         {/* Top KPIs */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 16, marginBottom: 32 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fill, minmax(160px, 1fr))', gap: 16, marginBottom: 32 }}>
           {[
             { label: 'Total Leads', value: totalLeads, color: '#1a5c3a' },
             { label: 'Open Chats', value: conversationsByStatus.open ?? 0, color: '#3b82f6' },
@@ -106,7 +105,7 @@ export default function Analytics() {
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 24, marginBottom: 24 }}>
           {/* Lead Pipeline */}
           <div style={{ background: '#fff', borderRadius: 12, padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
             <BarChart data={leadsByStatus} colorMap={STATUS_COLORS} title="Lead Pipeline by Status" />
@@ -141,7 +140,6 @@ export default function Analytics() {
             {!Object.keys(leadsByLanguage).length && <div style={{ color: '#aaa', fontSize: 13 }}>No data</div>}
           </div>
         </div>
-      </main>
-    </div>
+    </Layout>
   )
 }

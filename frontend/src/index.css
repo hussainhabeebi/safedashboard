@@ -14,3 +14,13 @@ body {
 #root {
   min-height: 100vh;
 }
+
+/* Mobile base */
+@media (max-width: 768px) {
+  table { font-size: 13px; }
+  input, select, textarea, button { font-size: 16px !important; } /* prevent iOS zoom */
+}
+
+/* Prevent pull-to-refresh interfering */
+html { overflow: hidden; height: 100%; }
+body { overflow: auto; height: 100%; -webkit-overflow-scrolling: touch; }

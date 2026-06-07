@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import Sidebar from '../components/Sidebar'
+import Layout from '../components/Layout'
+import useIsMobile from '../hooks/useIsMobile'
 
 export default function Contacts() {
   const [contacts, setContacts] = useState([])
@@ -12,6 +13,7 @@ export default function Contacts() {
   const [convos, setConvos] = useState({})
   const [loadingConvos, setLoadingConvos] = useState(null)
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
 
   const fetchContacts = useCallback(() => {
     setLoading(true)
@@ -44,9 +46,7 @@ export default function Contacts() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar />
-      <main style={{ flex: 1, padding: '32px 40px', overflow: 'auto' }}>
+    <Layout>
         <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontSize: 26, fontWeight: 700, color: '#1a5c3a' }}>Contacts</h1>
           <p style={{ color: '#888', marginTop: 4, fontSize: 14 }}>All Chatwoot contacts</p>
@@ -66,16 +66,20 @@ export default function Contacts() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f9fafb' }}>
-                  {['Name', 'Phone', 'Email', 'Location', 'Conversations', 'Created', ''].map(h => (
-                    <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</th>
-                  ))}
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Name</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Phone</th>
+                  {!isMobile && <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Email</th>}
+                  {!isMobile && <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Location</th>}
+                  {!isMobile && <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Conversations</th>}
+                  {!isMobile && <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Created</th>}
+                  <th style={{ padding: '12px 16px' }}></th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={7} style={{ padding: 32, textAlign: 'center', color: '#888' }}>Loading...</td></tr>
+                  <tr><td colSpan={isMobile ? 3 : 7} style={{ padding: 32, textAlign: 'center', color: '#888' }}>Loading...</td></tr>
                 ) : contacts.length === 0 ? (
-                  <tr><td colSpan={7} style={{ padding: 32, textAlign: 'center', color: '#888' }}>No contacts found</td></tr>
+                  <tr><td colSpan={isMobile ? 3 : 7} style={{ padding: 32, textAlign: 'center', color: '#888' }}>No contacts found</td></tr>
                 ) : contacts.map(c => (
                   <React.Fragment key={c.id}>
                     <tr
@@ -95,19 +99,19 @@ export default function Contacts() {
                         </div>
                       </td>
                       <td style={{ padding: '12px 16px', fontSize: 14, color: '#555' }}>{c.phone_number || '—'}</td>
-                      <td style={{ padding: '12px 16px', fontSize: 14, color: '#555' }}>{c.email || '—'}</td>
-                      <td style={{ padding: '12px 16px', fontSize: 14, color: '#555' }}>{c.location || '—'}</td>
-                      <td style={{ padding: '12px 16px', fontSize: 14, color: '#555' }}>{c.conversations_count ?? '—'}</td>
-                      <td style={{ padding: '12px 16px', fontSize: 13, color: '#888' }}>
+                      {!isMobile && <td style={{ padding: '12px 16px', fontSize: 14, color: '#555' }}>{c.email || '—'}</td>}
+                      {!isMobile && <td style={{ padding: '12px 16px', fontSize: 14, color: '#555' }}>{c.location || '—'}</td>}
+                      {!isMobile && <td style={{ padding: '12px 16px', fontSize: 14, color: '#555' }}>{c.conversations_count ?? '—'}</td>}
+                      {!isMobile && <td style={{ padding: '12px 16px', fontSize: 13, color: '#888' }}>
                         {c.created_at ? new Date(c.created_at * 1000).toLocaleDateString('en-IN') : '—'}
-                      </td>
+                      </td>}
                       <td style={{ padding: '12px 16px', fontSize: 12, color: '#1a5c3a' }}>
                         {expanded === c.id ? '▲' : '▼'}
                       </td>
                     </tr>
                     {expanded === c.id && (
                       <tr style={{ background: '#f9fafb', borderTop: '1px solid #f0f0f0' }}>
-                        <td colSpan={7} style={{ padding: '16px 24px' }}>
+                        <td colSpan={isMobile ? 3 : 7} style={{ padding: '16px 24px' }}>
                           {loadingConvos === c.id ? (
                             <div style={{ color: '#888', fontSize: 13 }}>Loading conversations...</div>
                           ) : (convos[c.id] || []).length === 0 ? (
@@ -165,7 +169,6 @@ export default function Contacts() {
             </button>
           </div>
         </div>
-      </main>
-    </div>
+    </Layout>
   )
 }

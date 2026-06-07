@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import Sidebar from '../components/Sidebar'
+import Layout from '../components/Layout'
+import useIsMobile from '../hooks/useIsMobile'
 
 const LANGUAGES = [
   { value: 'auto', label: 'Auto-detect' },
@@ -11,6 +12,7 @@ const LANGUAGES = [
 export default function BotControl() {
   const [config, setConfig] = useState({ system_prompt: '', bot_enabled: true, default_language: 'auto' })
   const [loading, setLoading] = useState(true)
+  const isMobile = useIsMobile()
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [testMsg, setTestMsg] = useState('')
@@ -62,19 +64,16 @@ export default function BotControl() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh' }}>
-        <Sidebar />
-        <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Layout>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
           <div style={{ color: '#888' }}>Loading...</div>
-        </main>
-      </div>
+        </div>
+      </Layout>
     )
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar />
-      <main style={{ flex: 1, padding: '32px 40px', overflow: 'auto' }}>
+    <Layout>
         <div style={{ marginBottom: 32 }}>
           <h1 style={{ fontSize: 26, fontWeight: 700, color: '#1a5c3a' }}>Bot Control</h1>
           <p style={{ color: '#888', marginTop: 4, fontSize: 14 }}>Configure the AI assistant behaviour</p>
@@ -107,7 +106,7 @@ export default function BotControl() {
           </div>
         </div>
 
-        <form onSubmit={handleSave} style={{ maxWidth: 760 }}>
+        <form onSubmit={handleSave} style={{ maxWidth: isMobile ? '100%' : 760 }}>
           {/* Bot Enable Toggle */}
           <div style={{
             background: '#fff', borderRadius: 12, padding: '20px 24px',
@@ -271,7 +270,6 @@ export default function BotControl() {
             )}
           </div>
         </form>
-      </main>
-    </div>
+    </Layout>
   )
 }

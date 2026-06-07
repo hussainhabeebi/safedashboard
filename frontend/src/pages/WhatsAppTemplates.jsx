@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import Sidebar from '../components/Sidebar'
+import Layout from '../components/Layout'
+import useIsMobile from '../hooks/useIsMobile'
 
 const CATEGORIES = ['MARKETING', 'UTILITY', 'AUTHENTICATION']
 const LANGUAGES = [
@@ -16,6 +17,7 @@ const STATUS_STYLE = {
 const LEAD_STATUSES = ['New', 'Warm', 'Quoted', 'Closed', 'Not Interested']
 
 export default function WhatsAppTemplates() {
+  const isMobile = useIsMobile()
   const [tab, setTab] = useState('templates')
   const [templates, setTemplates] = useState([])
   const [loadingTemplates, setLoadingTemplates] = useState(true)
@@ -126,9 +128,7 @@ export default function WhatsAppTemplates() {
   const templateBody = selectedTemplateObj?.components?.find(c => c.type === 'BODY')?.text || ''
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar />
-      <main style={{ flex: 1, padding: '32px 40px', overflow: 'auto' }}>
+    <Layout>
         <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontSize: 26, fontWeight: 700, color: '#1a5c3a' }}>WhatsApp Marketing</h1>
           <p style={{ color: '#888', marginTop: 4, fontSize: 14 }}>Manage templates and send bulk campaigns</p>
@@ -217,9 +217,11 @@ export default function WhatsAppTemplates() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: '#f9fafb' }}>
-                      {['Name', 'Category', 'Language', 'Status', 'Preview'].map(h => (
-                        <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</th>
-                      ))}
+                      <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Name</th>
+                      {!isMobile && <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Category</th>}
+                      {!isMobile && <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Language</th>}
+                      <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Preview</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -229,8 +231,8 @@ export default function WhatsAppTemplates() {
                       return (
                         <tr key={t.id || t.name} style={{ borderTop: '1px solid #f0f0f0' }}>
                           <td style={{ padding: '12px 16px', fontWeight: 600, fontSize: 14 }}>{t.name}</td>
-                          <td style={{ padding: '12px 16px', fontSize: 13, color: '#555' }}>{t.category}</td>
-                          <td style={{ padding: '12px 16px', fontSize: 13, color: '#555' }}>{t.language}</td>
+                          {!isMobile && <td style={{ padding: '12px 16px', fontSize: 13, color: '#555' }}>{t.category}</td>}
+                          {!isMobile && <td style={{ padding: '12px 16px', fontSize: 13, color: '#555' }}>{t.language}</td>}
                           <td style={{ padding: '12px 16px' }}>
                             <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: ss.bg, color: ss.color }}>{t.status}</span>
                           </td>
@@ -251,7 +253,7 @@ export default function WhatsAppTemplates() {
 
         {/* ── BULK SEND TAB ── */}
         {tab === 'bulk' && (
-          <div style={{ maxWidth: 900 }}>
+          <div style={{ maxWidth: isMobile ? '100%' : 900 }}>
             {/* Step 1: Choose Template */}
             <div style={{ background: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#1a5c3a', marginBottom: 14 }}>Step 1 — Choose Template</div>
@@ -399,7 +401,6 @@ export default function WhatsAppTemplates() {
             )}
           </div>
         )}
-      </main>
-    </div>
+    </Layout>
   )
 }
