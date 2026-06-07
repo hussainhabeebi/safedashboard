@@ -201,6 +201,50 @@ export default function BotControl() {
             />
           </div>
 
+          {/* Test Bot */}
+          <div style={{
+            background: '#fff', borderRadius: 12, padding: '20px 24px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 24,
+          }}>
+            <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>Test Bot</div>
+            <div style={{ fontSize: 13, color: '#888', marginBottom: 14 }}>
+              Send a test message to the first open conversation to verify the bot is working.
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <input
+                value={testMsg}
+                onChange={e => setTestMsg(e.target.value)}
+                placeholder="Enter a test message..."
+                style={{
+                  flex: 1, padding: '9px 14px', border: '1.5px solid #ddd', borderRadius: 8,
+                  fontSize: 14, outline: 'none',
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleTest}
+                disabled={testing || !testMsg.trim()}
+                style={{
+                  padding: '9px 20px', background: testing || !testMsg.trim() ? '#ccc' : '#c9a84c',
+                  color: '#fff', border: 'none', borderRadius: 8,
+                  fontSize: 14, fontWeight: 600, cursor: testing || !testMsg.trim() ? 'not-allowed' : 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {testing ? 'Sending...' : 'Send Test'}
+              </button>
+            </div>
+            {testResult && (
+              <div style={{
+                marginTop: 10, padding: '8px 14px', borderRadius: 7, fontSize: 13, fontWeight: 500,
+                background: testResult.ok ? '#e8f5e9' : '#fef2f2',
+                color: testResult.ok ? '#1a5c3a' : '#ef4444',
+              }}>
+                {testResult.ok ? '✓ ' : '✗ '}{testResult.text}
+              </div>
+            )}
+          </div>
+
           {/* Save Button */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <button
