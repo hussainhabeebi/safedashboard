@@ -4,22 +4,30 @@ const wa = require('../services/whatsapp');
 
 // GET /api/whatsapp/templates
 router.get('/templates', async (req, res) => {
+  if (!process.env.WHATSAPP_API_TOKEN || !process.env.WHATSAPP_BUSINESS_ACCOUNT_ID) {
+    return res.status(503).json({ error: 'WhatsApp not configured. Set WHATSAPP_API_TOKEN and WHATSAPP_BUSINESS_ACCOUNT_ID in environment.' });
+  }
   try {
     const data = await wa.getTemplates();
     res.json(data);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch templates' });
+    console.error('WA getTemplates error:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data?.error?.message || 'Failed to fetch templates' });
   }
 });
 
 // POST /api/whatsapp/templates — create a new template
 router.post('/templates', async (req, res) => {
+  if (!process.env.WHATSAPP_API_TOKEN || !process.env.WHATSAPP_BUSINESS_ACCOUNT_ID) {
+    return res.status(503).json({ error: 'WhatsApp not configured. Set WHATSAPP_API_TOKEN and WHATSAPP_BUSINESS_ACCOUNT_ID in environment.' });
+  }
   try {
     const { name, category, language, components } = req.body;
     const data = await wa.createTemplate(name, category, language, components);
     res.json(data);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to create template' });
+    console.error('WA createTemplate error:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data?.error?.message || 'Failed to create template' });
   }
 });
 
@@ -36,8 +44,11 @@ router.post('/send', async (req, res) => {
 
 // POST /api/whatsapp/bulk — send to selected leads
 router.post('/bulk', async (req, res) => {
+  if (!process.env.WHATSAPP_API_TOKEN || !process.env.WHATSAPP_PHONE_NUMBER_ID) {
+    return res.status(503).json({ error: 'WhatsApp not configured. Set WHATSAPP_API_TOKEN and WHATSAPP_PHONE_NUMBER_ID in environment.' });
+  }
   try {
-    const { phones, templateName, languageCode = 'en', components = [] } = req.body;
+    const { phones, templateName, languageCode = 'en_US', components = [] } = req.body;
     if (!phones?.length || !templateName) {
       return res.status(400).json({ error: 'phones and templateName are required' });
     }
@@ -48,7 +59,8 @@ router.post('/bulk', async (req, res) => {
       failed: results.filter(r => r.status === 'failed').length,
     });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to send bulk messages' });
+    console.error('WA bulk send error:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data?.error?.message || 'Failed to send bulk messages' });
   }
 });
 

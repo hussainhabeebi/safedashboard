@@ -16,7 +16,9 @@ export default function Conversations() {
   const [selected, setSelected] = useState(null)
   const [messages, setMessages] = useState([])
   const [loadingList, setLoadingList] = useState(true)
+  const [listError, setListError] = useState(null)
   const [loadingMsgs, setLoadingMsgs] = useState(false)
+  const [msgsError, setMsgsError] = useState(null)
   const [handingOver, setHandingOver] = useState(false)
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
@@ -32,7 +34,7 @@ export default function Conversations() {
         const items = res.data?.data?.payload ?? res.data?.payload ?? res.data ?? []
         setConversations(Array.isArray(items) ? items : [])
       })
-      .catch(() => {})
+      .catch(err => setListError(err.response?.data?.error || 'Failed to load conversations'))
       .finally(() => setLoadingList(false))
   }, [])
 
@@ -54,6 +56,7 @@ export default function Conversations() {
   useEffect(() => {
     if (!selected) return
     setLoadingMsgs(true)
+    setMsgsError(null)
     setMessages([])
     axios.get(`/api/conversations/${selected.id}/messages`, { withCredentials: true })
       .then(res => {
@@ -61,7 +64,7 @@ export default function Conversations() {
         const arr = Array.isArray(msgs) ? msgs : (msgs?.messages ?? [])
         setMessages(arr.sort((a, b) => a.created_at - b.created_at))
       })
-      .catch(() => {})
+      .catch(err => setMsgsError(err.response?.data?.error || 'Failed to load messages'))
       .finally(() => setLoadingMsgs(false))
   }, [selected])
 
@@ -135,6 +138,8 @@ export default function Conversations() {
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {loadingList ? (
                 <div style={{ padding: 24, textAlign: 'center', color: '#888', fontSize: 13 }}>Loading...</div>
+              ) : listError ? (
+                <div style={{ padding: 24, textAlign: 'center', color: '#ef4444', fontSize: 12 }}>⚠️ {listError}</div>
               ) : filtered.length === 0 ? (
                 <div style={{ padding: 24, textAlign: 'center', color: '#aaa', fontSize: 13 }}>No conversations</div>
               ) : filtered.map(c => (
@@ -202,6 +207,8 @@ export default function Conversations() {
                 <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {loadingMsgs ? (
                     <div style={{ textAlign: 'center', color: '#888', paddingTop: 40 }}>Loading messages...</div>
+                  ) : msgsError ? (
+                    <div style={{ textAlign: 'center', color: '#ef4444', paddingTop: 40, fontSize: 13 }}>⚠️ {msgsError}</div>
                   ) : messages.length === 0 ? (
                     <div style={{ textAlign: 'center', color: '#aaa', paddingTop: 40 }}>No messages</div>
                   ) : messages.map(msg => {

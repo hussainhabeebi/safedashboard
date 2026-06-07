@@ -26,6 +26,7 @@ export default function WhatsAppTemplates() {
   const [createForm, setCreateForm] = useState({ name: '', category: 'MARKETING', language: 'en_US', body: '' })
   const [creating, setCreating] = useState(false)
   const [createResult, setCreateResult] = useState(null)
+  const [templateError, setTemplateError] = useState(null)
 
   // Bulk send state
   const [selectedTemplate, setSelectedTemplate] = useState('')
@@ -43,11 +44,14 @@ export default function WhatsAppTemplates() {
 
   async function fetchTemplates() {
     setLoadingTemplates(true)
+    setTemplateError(null)
     try {
       const res = await axios.get('/api/whatsapp/templates', { withCredentials: true })
       const items = res.data?.data ?? res.data ?? []
       setTemplates(Array.isArray(items) ? items : [])
-    } catch {}
+    } catch (err) {
+      setTemplateError(err.response?.data?.error || 'Failed to load templates')
+    }
     setLoadingTemplates(false)
   }
 
@@ -212,6 +216,8 @@ export default function WhatsAppTemplates() {
             <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
               {loadingTemplates ? (
                 <div style={{ padding: 32, textAlign: 'center', color: '#888' }}>Loading templates...</div>
+              ) : templateError ? (
+                <div style={{ padding: 32, textAlign: 'center', color: '#ef4444', fontSize: 13 }}>⚠️ {templateError}</div>
               ) : templates.length === 0 ? (
                 <div style={{ padding: 32, textAlign: 'center', color: '#aaa' }}>No templates found. Create one above.</div>
               ) : (
